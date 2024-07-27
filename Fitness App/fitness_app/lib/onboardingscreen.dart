@@ -3,6 +3,7 @@ import 'package:fitness_app/handtraining.dart'; // Import HandTrainingScreen
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'login.dart'; // Import LoginScreen
 
 class Onboarding extends StatefulWidget {
   const Onboarding({super.key});
@@ -114,7 +115,7 @@ class _OnboardingState extends State<Onboarding> {
                     onPressed: () {
                       Navigator.of(context)
                           .push(MaterialPageRoute(builder: (context) {
-                        return const BottomBar();
+                        return const LoginScreen(); // Navigate to Login Screen
                       }));
                     },
                     child: Text(
