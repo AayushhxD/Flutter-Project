@@ -1,8 +1,5 @@
+import 'package:expense_manager/splashscreen.dart';
 import 'package:flutter/material.dart';
-import 'package:plantselling/detailscreen.dart';
-import 'package:plantselling/getstartedscreen.dart';
-import 'package:plantselling/homescreen.dart';
-import 'package:plantselling/loginscreen.dart';
 
 void main() {
   runApp(const MainApp());
@@ -15,7 +12,9 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: GetStartedScreen(),
+      home: Scaffold(
+        body: SplashScreen(),
+      ),
     );
   }
 }

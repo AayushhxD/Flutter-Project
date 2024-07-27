@@ -1,360 +1,339 @@
-import "package:flutter/cupertino.dart";
-import "package:flutter/material.dart";
-import "package:flutter/widgets.dart";
-import "package:plantselling/detailscreen.dart";
+import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:expense_manager/db_helper.dart';
+import 'package:expense_manager/drawerscreen.dart';
+import 'package:expense_manager/modalClass.dart';
 
-class homescreen extends StatefulWidget {
-  const homescreen({super.key});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
-  State createState() => _homeScreenState();
+  State createState() => _HomeScreenState();
 }
 
-class _homeScreenState extends State {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
+  final TextEditingController amountController = TextEditingController();
+  final TextEditingController categoryController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
+  bool _isDarkMode = false;
+  String _searchQuery = '';
+  late AnimationController _animationController;
+
+  final Map<String, String> categoryImages = {
+    "Medicine": "assets/images/Medicine.png",
+    "Food": "assets/images/Food.png",
+    "Fuel": "assets/images/Fuel.png",
+    "Shopping": "assets/images/Shopping.png",
+    "Entertainment": "assets/images/Entertainment.png",
+  };
+
+  List<TransactionModalClass> transactionList = [];
+  final DatabaseHelper _dbHelper = DatabaseHelper();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTransactions();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadTransactions() async {
+    final transactions = await _dbHelper.getTransactions();
+    setState(() {
+      transactionList = transactions.map((txn) {
+        return TransactionModalClass(
+          title: txn['category']!,
+          amount: txn['amount']!,
+          desccription: txn['description']!,
+        );
+      }).toList();
+    });
+  }
+
+  void submit({String? oldCategory}) async {
+    final newTransaction = {
+      'amount': amountController.text,
+      'category': categoryController.text,
+      'description': descriptionController.text,
+    };
+
+    if (oldCategory != null) {
+      await _dbHelper.updateTransaction(oldCategory, newTransaction);
+    } else {
+      await _dbHelper.insertTransaction(newTransaction);
+    }
+
+    setState(() {
+      if (oldCategory != null) {
+        final index =
+            transactionList.indexWhere((txn) => txn.title == oldCategory);
+        if (index != -1) {
+          transactionList[index] = TransactionModalClass(
+            title: categoryController.text,
+            amount: amountController.text,
+            desccription: descriptionController.text,
+          );
+        }
+      } else {
+        transactionList.add(TransactionModalClass(
+          title: categoryController.text,
+          amount: amountController.text,
+          desccription: descriptionController.text,
+        ));
+      }
+    });
+
+    Navigator.of(context).pop();
+  }
+
+  void bottomSheet({TransactionModalClass? transaction}) {
+    if (transaction != null) {
+      amountController.text = transaction.amount;
+      categoryController.text = transaction.title;
+      descriptionController.text = transaction.desccription;
+    } else {
+      amountController.clear();
+      categoryController.clear();
+      descriptionController.clear();
+    }
+
+    showModalBottomSheet(
+      backgroundColor: _isDarkMode ? Colors.grey[900] : Colors.white,
+      isScrollControlled: true,
+      isDismissible: true,
+      context: context,
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              top: 16,
+              bottom: MediaQuery.of(context).viewInsets.bottom),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 20),
+              _buildTextField(amountController, 'Enter amount', 'Amount'),
+              const SizedBox(height: 20),
+              _buildTextField(categoryController, 'Enter category', 'Category'),
+              const SizedBox(height: 20),
+              _buildTextField(
+                  descriptionController, 'Enter description', 'Description'),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  submit(oldCategory: transaction?.title);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromRGBO(14, 161, 125, 1),
+                  fixedSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+                child: Text(
+                  "Save",
+                  style: GoogleFonts.poppins(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 15),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTextField(
+      TextEditingController controller, String hint, String label) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+        ),
+        hintText: hint,
+        labelText: label,
+        hintStyle: GoogleFonts.poppins(
+          color: _isDarkMode ? Colors.grey[400] : Colors.grey[700],
+        ),
+        labelStyle: GoogleFonts.poppins(
+          color: _isDarkMode ? Colors.white : Colors.black,
+        ),
+        filled: true,
+        fillColor: _isDarkMode ? Colors.grey[800] : Colors.grey[200],
+      ),
+      style: GoogleFonts.poppins(
+        color: _isDarkMode ? Colors.white : Colors.black,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        backgroundColor:const Color.fromRGBO(251, 247, 248, 1),
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              height: 159,
-              width: 360,
-              decoration: const BoxDecoration(),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      SizedBox(
-                        height: 81,
-                        width: 250,
-                        child: Image.asset(
-                          "assets/appbarimage.png",
-                          width: 200,
-                          height: 81,
-                          alignment: Alignment.topRight,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    //mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      const SizedBox(
-                        height: 64,
-                        width: 176,
-                        child: Text(
-                          "Find Your Favorite Plants",
-                          style: TextStyle(
-                            fontSize: 23,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        height: 40,
-                        width: 40,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.white,
-                            ),
-                        child: Center(
-                          child: IconButton(
-                              onPressed: () {
+    final filteredTransactions = transactionList
+        .where((txn) =>
+            txn.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            txn.desccription.toLowerCase().contains(_searchQuery.toLowerCase()))
+        .toList();
 
-                              },
-                              icon: const Icon(Icons.local_mall_outlined,
-                                  color: Colors.green),
-                          ),
-                        ),
+    return Scaffold(
+      backgroundColor: _isDarkMode ? Colors.black : Colors.white,
+      appBar: AppBar(
+        backgroundColor: _isDarkMode ? Colors.grey[900] : Colors.white,
+        title: Text(
+          "June 2024",
+          style: GoogleFonts.poppins(
+            color: _isDarkMode ? Colors.white : Colors.black,
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: Icon(Icons.menu,
+                color: _isDarkMode ? Colors.white : Colors.black),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              _isDarkMode ? Icons.dark_mode : Icons.light_mode,
+              color: _isDarkMode ? Colors.white : Colors.black,
+            ),
+            onPressed: () {
+              setState(() {
+                _isDarkMode = !_isDarkMode;
+              });
+            },
+          ),
+        ],
+      ),
+      drawer: const MyDrawer(),
+      body: Column(
+        children: [
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: TextField(
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                });
+              },
+              decoration: InputDecoration(
+                prefixIcon: Icon(Icons.search,
+                    color: _isDarkMode ? Colors.white : Colors.black),
+                hintText: 'Search transactions...',
+                hintStyle: GoogleFonts.poppins(
+                  color: _isDarkMode ? Colors.grey[400] : Colors.grey[700],
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+              style: GoogleFonts.poppins(
+                color: _isDarkMode ? Colors.white : Colors.black,
+              ),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: filteredTransactions.length,
+              itemBuilder: (context, index) {
+                final txn = filteredTransactions[index];
+                return Slidable(
+                  key: ValueKey(txn.title),
+                  endActionPane: ActionPane(
+                    motion: const StretchMotion(),
+                    children: [
+                      SlidableAction(
+                        onPressed: (context) {
+                          bottomSheet(transaction: txn);
+                        },
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        icon: Icons.edit,
+                        label: 'Edit',
+                      ),
+                      SlidableAction(
+                        onPressed: (context) async {
+                          await _dbHelper.deleteTransaction(txn.title);
+                          _loadTransactions();
+                        },
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        icon: Icons.delete,
+                        label: 'Delete',
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                shrinkWrap: true,
-                itemCount: 3,
-                itemBuilder: (context, index) {
-                  return Container(
-                    padding: const EdgeInsets.all(10),
-                    margin: const EdgeInsets.all(10),
-                    height: 100,
-                    width: 300,
-                    decoration: const BoxDecoration(
-                      color: Color.fromRGBO(204, 231, 185, 1),
-                      borderRadius: BorderRadius.all(Radius.circular(15)),
+                  child: Card(
+                    margin:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "30 % OFF",
-                              style: TextStyle(
-                                fontSize: 25,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            SizedBox(
-                              height: 5,
-                            ),
-                            Text(
-                              "02 - 23- April",
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            )
-                          ],
+                    elevation: 5,
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.all(16),
+                      leading: CircleAvatar(
+                        backgroundImage:
+                            AssetImage(categoryImages[txn.title] ?? ''),
+                      ),
+                      title: Text(
+                        txn.title,
+                        style: GoogleFonts.poppins(
+                          color: _isDarkMode ? Colors.white : Colors.black,
+                          fontWeight: FontWeight.w500,
                         ),
-                        Expanded(
-                          child: Image.asset(
-                            "assets/bannerimage.png",
-                            // height:108,
-                            // width: 120,
-                          ),
+                      ),
+                      subtitle: Text(
+                        txn.desccription,
+                        style: GoogleFonts.poppins(
+                          color: _isDarkMode ? Colors.white70 : Colors.black54,
                         ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  height: 8,
-                  width: 8,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(100),
-                      color: const Color.fromRGBO(62, 102, 24, 1)),
-                ),
-                const SizedBox(
-                  width: 5,
-                ),
-                Container(
-                  height: 8,
-                  width: 8,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(100),
-                      color:const  Color.fromARGB(255, 109, 151, 70)),
-                ),
-                const SizedBox(
-                  width: 5,
-                ),
-                Container(
-                  height: 8,
-                  width: 8,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(100),
-                      color: const Color.fromARGB(255, 117, 153, 84)),
-                ),
-              ],
-            ),
-            Container(
-              margin:const  EdgeInsets.all(10),
-              alignment: Alignment.centerLeft,
-              child: const Text(
-                "Indoor",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                shrinkWrap: true,
-                itemCount: 4,
-                itemBuilder: (context, index) {
-                  return GestureDetector(
-                    onTap: (){
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const DetailScreen(),
-                            ),
-                      );
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.all(10),
-                      padding: const EdgeInsets.all(10),
-                      height: 188,
-                      width: 141,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child: Image.asset(
-                              "assets/product.png",
-                              height: 112,
-                              width: 90,
-                            ),
-                          ),
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            child: const Text(
-                              "Snake Plants",
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              Container(
-                                alignment: Alignment.centerLeft,
-                                child: const Text(
-                                  "₹300",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color.fromRGBO(62, 102, 24, 1),
-                                  ),
-                                ),
-                              ),
-                              const Spacer(),
-                              Container(
-                                height: 26,
-                                width: 26,
-                                decoration: BoxDecoration(
-                                  color: const Color.fromRGBO(
-                                      237, 238, 235, 1),
-                                  borderRadius: BorderRadius.circular(100),
-                                ),
-                                child: const Center(
-                                  child:  Icon(
-                                      size: 17,
-                                      color: Colors.black,
-                                      Icons.local_mall_outlined,
-                                    ),
-                                ),
-                              )
-                            ],
-                          )
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const Divider( 
-              thickness: 1,
-              indent: 10,
-              endIndent: 10,
-              color: Color.fromRGBO(204, 211, 196, 1),
-            ),
-            Container(
-              margin: const EdgeInsets.all(10),
-              alignment: Alignment.centerLeft,
-              child: const Text(
-                "Outdoor",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                shrinkWrap: true,
-                itemCount: 4,
-                itemBuilder: (context, index) {
-                  return GestureDetector(
-                    onTap: () {
-                         Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const DetailScreen(),
+                      trailing: Text(
+                        '\$${txn.amount}',
+                        style: GoogleFonts.poppins(
+                          color: _isDarkMode ? Colors.white : Colors.black,
+                          fontWeight: FontWeight.w500,
                         ),
-                      );
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.all(10),
-                      padding:const EdgeInsets.all(10),
-                      height: 188,
-                      width: 141,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Column(
-                        
-                        children: [
-                          Expanded(
-                            child: Image.asset(
-                              "assets/product.png",
-                              height: 112,
-                              width: 90,
-                            ),
-                          ),
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            child: const Text(
-                              "Snake Plants",
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                alignment: Alignment.centerLeft,
-                                child: const Text(
-                                  "₹300",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color.fromRGBO(62, 102, 24, 1),
-                                  ),
-                                ),
-                              ),
-                              const Spacer(),
-                              Container(
-                                height: 26,
-                                width: 26,
-                                decoration: BoxDecoration(
-                                  color: const Color.fromRGBO(
-                                      237, 238, 235, 1),
-                                  borderRadius: BorderRadius.circular(100),
-                                ),
-                                child: const Icon(
-                                    size: 17,
-                                    color: Colors.black,
-                                    Icons.local_mall_outlined,
-                                  ),
-                              )
-                            ],
-                          )
-                        ],
                       ),
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
-          ],
-        ));
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => bottomSheet(),
+        backgroundColor: const Color.fromRGBO(14, 161, 125, 1),
+        child: Icon(
+          Icons.add,
+          color: Colors.white,
+          size: 30,
+        ),
+      ),
+    );
   }
 }
