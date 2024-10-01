@@ -1,10 +1,8 @@
-import "package:expense_manager/categoryscreen.dart";
-import "package:expense_manager/graphscreen.dart";
-import "package:expense_manager/homescreen.dart";
-import "package:expense_manager/trashscreen.dart";
-// Adjust the path as necessary
-
-import "package:flutter/material.dart";
+import 'package:expense_manager/categoryscreen.dart';
+import 'package:expense_manager/graphscreen.dart';
+import 'package:expense_manager/homescreen.dart';
+import 'package:expense_manager/trashscreen.dart';
+import 'package:flutter/material.dart';
 
 class MyDrawer extends StatefulWidget {
   const MyDrawer({super.key});
@@ -13,12 +11,23 @@ class MyDrawer extends StatefulWidget {
   State createState() => _MyDrawerState();
 }
 
-class _MyDrawerState extends State<MyDrawer> {
+class _MyDrawerState extends State<MyDrawer> with TickerProviderStateMixin {
   bool transactionFlag = false;
   bool graphFlag = false;
   bool categoryFlag = false;
   bool trashFlag = false;
   bool aboutusFlag = false;
+
+  late AnimationController _animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,331 +37,212 @@ class _MyDrawerState extends State<MyDrawer> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(
-            height: 60,
-          ),
+          const SizedBox(height: 60),
           Padding(
-            padding: const EdgeInsets.only(
-              left: 20,
-            ),
+            padding: const EdgeInsets.only(left: 20),
             child: Column(
               children: [
                 Row(
                   children: [
-                    Container(
-                      alignment: Alignment.centerLeft,
-                      child: const Text(
+                    Expanded(
+                      child: Text(
                         "Expense Manager",
                         style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.w600),
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
                       ),
                     ),
-                    const SizedBox(
-                      width: 40,
-                    ),
                     IconButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        icon: const Icon(Icons.close))
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      icon: const Icon(Icons.close),
+                    ),
                   ],
                 ),
-                Container(
-                  alignment: Alignment.centerLeft,
-                  child: const Text(
-                    "Saves all your Transactions",
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
-                  ),
+                const Text(
+                  "Saves all your Transactions",
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
                 ),
               ],
             ),
           ),
-          const SizedBox(
-            height: 20,
-          ),
-          //Transaction conatiner
-          GestureDetector(
+          const SizedBox(height: 20),
+          _buildDrawerItem(
+            context,
+            icon: Icons.my_library_books_outlined,
+            title: "Transaction",
+            flag: transactionFlag,
             onTap: () {
+              setState(() {
+                transactionFlag = true;
+                graphFlag = false;
+                categoryFlag = false;
+                trashFlag = false;
+                aboutusFlag = false;
+              });
               Navigator.pop(context);
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const HomeScreen()),
               );
-              if (!transactionFlag) {
-                transactionFlag = true;
-                categoryFlag = false;
-                graphFlag = false;
-                transactionFlag = false;
-                aboutusFlag = false;
-              }
-              setState(() {});
             },
-            child: Container(
-              alignment: Alignment.centerLeft,
-              height: 45,
-              width: 185,
-              decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.only(
-                      topRight: Radius.circular(20),
-                      bottomRight: Radius.circular(20)),
-                  color: transactionFlag
-                      ? const Color.fromRGBO(14, 161, 125, 0.15)
-                      : const Color.fromRGBO(255, 255, 255, 1)),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  const SizedBox(
-                    width: 10,
-                  ),
-                  const Icon(
-                    Icons.my_library_books_outlined,
-                    color: Color.fromRGBO(4, 161, 125, 1),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.all(10),
-                    child: const Text(
-                      "Transaction",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                        color: Color.fromRGBO(14, 161, 125, 1),
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ),
           ),
-          const SizedBox(
-            height: 10,
-          ),
-          //Graphs Conatiner
-          GestureDetector(
+          _buildDrawerItem(
+            context,
+            icon: Icons.data_saver_off_outlined,
+            title: "Graphs",
+            flag: graphFlag,
             onTap: () {
+              setState(() {
+                graphFlag = true;
+                transactionFlag = false;
+                categoryFlag = false;
+                trashFlag = false;
+                aboutusFlag = false;
+              });
               Navigator.pop(context);
               Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const MyAppGraphs(),
-                  ));
-              setState(() {
-                if (!graphFlag) {
-                  graphFlag = true;
-                  transactionFlag = false;
-                  categoryFlag = false;
-                  trashFlag = false;
-                  aboutusFlag = false;
-                }
-              });
+                context,
+                MaterialPageRoute(builder: (context) => const MyAppGraphs()),
+              );
             },
-            child: Container(
-              alignment: Alignment.centerLeft,
-              height: 45,
-              width: 185,
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.only(
-                    topRight: Radius.circular(20),
-                    bottomRight: Radius.circular(20)),
-                color: (graphFlag)
-                    ? const Color.fromRGBO(14, 161, 125, 0.15)
-                    : const Color.fromRGBO(255, 255, 255, 1),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  const SizedBox(
-                    width: 10,
-                  ),
-                  const Icon(
-                    Icons.data_saver_off_outlined,
-                    color: Color.fromRGBO(4, 161, 125, 1),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.all(10),
-                    child: const Text(
-                      "Graphs",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                        color: Color.fromRGBO(14, 161, 125, 1),
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ),
           ),
-          const SizedBox(
-            height: 10,
-          ),
-
-          ///Categories
-          GestureDetector(
+          _buildDrawerItem(
+            context,
+            icon: Icons.label,
+            title: "Category",
+            flag: categoryFlag,
             onTap: () {
-              Navigator.pop(context);
               setState(() {
-                if (!categoryFlag) {
-                  categoryFlag = true;
-                  transactionFlag = false;
-                  graphFlag = false;
-                  trashFlag = false;
-                  aboutusFlag = false;
-                }
+                categoryFlag = true;
+                transactionFlag = false;
+                graphFlag = false;
+                trashFlag = false;
+                aboutusFlag = false;
               });
+              Navigator.pop(context);
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const MyCategory()),
               );
             },
-            child: Container(
-              alignment: Alignment.centerLeft,
-              height: 45,
-              width: 185,
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.only(
-                    topRight: Radius.circular(20),
-                    bottomRight: Radius.circular(20)),
-                color: (categoryFlag)
-                    ? const Color.fromRGBO(14, 161, 125, 0.15)
-                    : const Color.fromRGBO(255, 255, 255, 1),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  const SizedBox(
-                    width: 10,
-                  ),
-                  const Icon(
-                    Icons.label,
-                    color: Color.fromRGBO(4, 161, 125, 1),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.all(10),
-                    child: const Text(
-                      "Category",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                        color: Color.fromRGBO(14, 161, 125, 1),
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ),
           ),
-          const SizedBox(
-            height: 10,
-          ),
-          //Trash
-          GestureDetector(
+          _buildDrawerItem(
+            context,
+            icon: Icons.delete,
+            title: "Trash",
+            flag: trashFlag,
             onTap: () {
-              Navigator.pop(context);
-              if (!trashFlag) {
+              setState(() {
                 trashFlag = true;
                 transactionFlag = false;
                 graphFlag = false;
                 categoryFlag = false;
                 aboutusFlag = false;
-              }
-
-              setState(() {});
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const MyAppTrash(),
-                  ));
-            },
-            child: Container(
-              alignment: Alignment.centerLeft,
-              height: 45,
-              width: 185,
-              decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.only(
-                      topRight: Radius.circular(20),
-                      bottomRight: Radius.circular(20)),
-                  color: (trashFlag)
-                      ? const Color.fromRGBO(14, 161, 125, 0.15)
-                      : const Color.fromRGBO(255, 255, 255, 1)),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  const SizedBox(
-                    width: 10,
-                  ),
-                  const Icon(
-                    Icons.delete,
-                    color: Color.fromRGBO(4, 161, 125, 1),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.all(10),
-                    child: const Text(
-                      "Trash",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                        color: Color.fromRGBO(14, 161, 125, 1),
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(
-            height: 10,
-          ),
-          //About us
-          GestureDetector(
-            onTap: () {
+              });
               Navigator.pop(context);
-              if (!aboutusFlag) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const MyAppTrash()),
+              );
+            },
+          ),
+          _buildDrawerItem(
+            context,
+            icon: Icons.person,
+            title: "About Us",
+            flag: aboutusFlag,
+            onTap: () {
+              setState(() {
                 aboutusFlag = true;
                 transactionFlag = false;
                 graphFlag = false;
                 categoryFlag = false;
                 trashFlag = false;
-              }
-              setState(() {});
+              });
+              Navigator.pop(context);
             },
-            child: Container(
-              alignment: Alignment.centerLeft,
-              height: 45,
-              width: 185,
-              decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.only(
-                      topRight: Radius.circular(20),
-                      bottomRight: Radius.circular(20)),
-                  color: (aboutusFlag)
-                      ? Color.fromRGBO(14, 161, 125, 0.15)
-                      : Colors.white),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  const SizedBox(
-                    width: 10,
-                  ),
-                  const Icon(
-                    Icons.person,
-                    color: Color.fromRGBO(4, 161, 125, 1),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.all(10),
-                    child: const Text(
-                      "About Us",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                        color: Color.fromRGBO(14, 161, 125, 1),
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildDrawerItem(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required bool flag,
+    required VoidCallback onTap,
+  }) {
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        return GestureDetector(
+          onTap: () {
+            onTap();
+            _animationController.forward().then((_) {
+              _animationController.reverse();
+            });
+          },
+          child: Container(
+            alignment: Alignment.centerLeft,
+            height: 45,
+            width: 185,
+            decoration: BoxDecoration(
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(20),
+                bottomRight: Radius.circular(20),
+              ),
+              color: flag
+                  ? const Color.fromRGBO(14, 161, 125, 0.15)
+                  : const Color.fromRGBO(255, 255, 255, 1),
+              boxShadow: flag
+                  ? [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.2),
+                        spreadRadius: 2,
+                        blurRadius: 5,
+                        offset: const Offset(0, 2),
+                      )
+                    ]
+                  : [],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                const SizedBox(width: 10),
+                Icon(
+                  icon,
+                  color: const Color.fromRGBO(4, 161, 125, 1),
+                ),
+                Container(
+                  margin: const EdgeInsets.all(10),
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                      color: flag
+                          ? const Color.fromRGBO(14, 161, 125, 1)
+                          : Colors.black,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 }

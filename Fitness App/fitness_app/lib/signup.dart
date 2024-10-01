@@ -39,7 +39,7 @@ class _SignupScreenState extends State<SignupScreen> {
       // Show success Snackbar
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Navigating to the next screen...'),
+          content: Text('Successful'),
           backgroundColor: Colors.green,
         ),
       );
